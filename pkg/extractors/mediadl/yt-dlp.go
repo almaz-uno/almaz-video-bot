@@ -177,7 +177,7 @@ const (
 )
 
 const (
-	VideoFormat     = "best[height<=480]"
+	VideoFormat     = "best[height<=480]/best"
 	VideoBestFormat = "best"
 	AudioOnlyFormat = "bestaudio"
 )
@@ -223,8 +223,8 @@ func YtDlp(ctx context.Context, dir, format string, args ...string) (*YtDlpInfo,
 	err = json.Unmarshal(bb, info)
 
 	if err == nil {
-		_ = os.WriteFile(filepath.Join(dir, info.infoFile(format)), []byte(di.Stdout), 0o644)
-		_ = os.WriteFile(filepath.Join(dir, info.infoFile(format+".err")), []byte(di.Stderr), 0o644)
+		_ = os.WriteFile(filepath.Join(dir, info.infoFile(info.FormatID)), []byte(di.Stdout), 0o644)
+		_ = os.WriteFile(filepath.Join(dir, info.infoFile(info.FormatID+".err")), []byte(di.Stderr), 0o644)
 	}
 
 	return info, di, err

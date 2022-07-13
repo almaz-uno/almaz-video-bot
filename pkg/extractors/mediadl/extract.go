@@ -109,7 +109,7 @@ func (extractor *Extractor) Extract(ctx context.Context, update *tgbotapi.Update
 				q.Q(e)
 				continue
 			} else {
-				lgg.Info().Err(e).Msg("Successfully downloaded")
+				lgg.Info().Msg("Successfully downloaded")
 			}
 
 			if len(info.RequestedDownloads) == 0 {
@@ -118,6 +118,10 @@ func (extractor *Extractor) Extract(ctx context.Context, update *tgbotapi.Update
 			}
 			title = info.Title
 			for _, rd := range info.RequestedDownloads {
+				lgg.Info().
+					Str("file", rd.Filename).
+					Str("format", rd.FormatID).
+					Msg("Downloaded file")
 				kbb = append(kbb, tgbotapi.NewInlineKeyboardButtonURL(
 					rd.Ext+": "+rd.Resolution,
 					extractor.urlPrefix+url.PathEscape(rd.Filename)))
