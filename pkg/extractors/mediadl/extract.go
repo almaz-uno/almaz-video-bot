@@ -84,6 +84,7 @@ func (extractor *Extractor) Extract(ctx context.Context, update *tgbotapi.Update
 
 			if e != nil {
 				lgg.Error().Err(e).Msg("Unable to download")
+				q.Q(e)
 				continue
 			} else {
 				lgg.Info().Err(e).Msg("Successfully downloaded")

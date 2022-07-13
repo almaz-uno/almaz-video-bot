@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type (
@@ -168,6 +169,22 @@ var commonArgs = []string{
 	"--dump-single-json",
 }
 
+type CommandError struct {
+	Cause  error
+	Path   string
+	Args   []string
+	Stdout string
+	Stderr string
+}
+
+func (e CommandError) Error() string {
+	return e.Path + " " + strings.Join(e.Args, " ") + ": " + e.Cause.Error()
+}
+
+func (e CommandError) Unwrap() error {
+	return e.Cause
+}
+
 func DownloadAudio(ctx context.Context, dir, URL string) (*YtDlpInfo, []byte, error) {
 	info, bb, err := ytDlp(ctx, dir, "--format", audioOnlyFormat, URL)
 	if bb != nil {
@@ -188,15 +205,24 @@ func ytDlp(ctx context.Context, dir string, args ...string) (*YtDlpInfo, []byte,
 	args = append(commonArgs, args...)
 	command := exec.CommandContext(ctx, ytDlpExec, args...)
 	command.Dir = dir
-	buffer := &bytes.Buffer{}
-	command.Stdout = buffer
+	outBuff := &bytes.Buffer{}
+	errBuff := &bytes.Buffer{}
+	command.Stdout = outBuff
+	command.Stderr = errBuff
 
 	err := command.Run()
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to execute %s: %w", ytDlpExec, err)
+		commandErr := &CommandError{
+			Cause:  err,
+			Path:   command.Path,
+			Args:   command.Args,
+			Stdout: outBuff.String(),
+			Stderr: errBuff.String(),
+		}
+		return nil, nil, commandErr
 	}
 
-	bb := buffer.Bytes()
+	bb := outBuff.Bytes()
 
 	info := new(YtDlpInfo)
 	err = json.Unmarshal(bb, info)

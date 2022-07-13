@@ -44,6 +44,8 @@ func loop(ctx context.Context, token string) error {
 const announceText = `
 To get video and audio from supported resources, please send video link to the this bot.
 Bot will download video (and audio if supported) with https://github.com/yt-dlp/yt-dlp and return link to this.
+
+You can inspect source codes of this bot in: https://github.com/almaz-uno/almaz-video-bot
 `
 
 func processUpdate(ctx context.Context, botAPI *tgbotapi.BotAPI, update tgbotapi.Update) {
