@@ -9,8 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/ryboe/q"
 )
 
 type (
@@ -138,30 +136,47 @@ type (
 		Epoch int    `json:"epoch,omitempty"`
 		Type  string `json:"_type,omitempty"`
 	}
+
+	CommandError struct {
+		DownloadInfo
+		Cause error
+	}
+
+	DownloadInfo struct {
+		Path   string
+		Args   []string
+		Stdout string
+		Stderr string
+	}
 )
 
-func (info *YtDlpInfo) audioInfoFile() string {
-	const tmpl = "%s.audio.json"
-	if len(info.RequestedDownloads) > 0 {
-		return fmt.Sprintf(tmpl, info.RequestedDownloads[0].Filename)
-	}
-	return fmt.Sprintf(tmpl, info.ID)
+func (di DownloadInfo) Command() string {
+	return di.Path + " " + strings.Join(di.Args, " ")
 }
 
-func (info *YtDlpInfo) videoInfoFile() string {
-	const tmpl = "%s.video.json"
+func (e CommandError) Error() string {
+	return e.Command() + ": " + e.Cause.Error()
+}
+
+func (e CommandError) Unwrap() error {
+	return e.Cause
+}
+
+func (info *YtDlpInfo) infoFile(format string) string {
+	const tmpl = "%s.%s.json"
 	if len(info.RequestedDownloads) > 0 {
-		return fmt.Sprintf(tmpl, info.RequestedDownloads[0].Filename)
+		return fmt.Sprintf(tmpl, info.RequestedDownloads[0].Filename, format)
 	}
-	return fmt.Sprintf(tmpl, info.ID)
+	return fmt.Sprintf(tmpl, info.ID, format)
 }
 
 // https://ostechnix.com/youtube-dl-tutorial-with-examples-for-beginners/
 const ytDlpExec = "/usr/bin/yt-dlp"
 
 const (
-	videoFormat     = "best[height<=480]"
-	audioOnlyFormat = "bestaudio"
+	VideoFormat     = "best[height<=480]"
+	VideoBestFormat = "best"
+	AudioOnlyFormat = "bestaudio"
 )
 
 var commonArgs = []string{
@@ -171,41 +186,11 @@ var commonArgs = []string{
 	"--dump-single-json",
 }
 
-type CommandError struct {
-	Cause  error
-	Path   string
-	Args   []string
-	Stdout string
-	Stderr string
-}
+func YtDlp(ctx context.Context, dir, format string, args ...string) (*YtDlpInfo, DownloadInfo, error) {
+	aa := append(commonArgs, "--format", format)
+	aa = append(aa, args...)
 
-func (e CommandError) Error() string {
-	return e.Path + " " + strings.Join(e.Args, " ") + ": " + e.Cause.Error()
-}
-
-func (e CommandError) Unwrap() error {
-	return e.Cause
-}
-
-func DownloadAudio(ctx context.Context, dir, URL string) (*YtDlpInfo, []byte, error) {
-	info, bb, err := ytDlp(ctx, dir, "--format", audioOnlyFormat, URL)
-	if bb != nil {
-		_ = os.WriteFile(filepath.Join(dir, info.audioInfoFile()), bb, 0o644)
-	}
-	return info, bb, err
-}
-
-func DownloadVideo(ctx context.Context, dir, URL string) (*YtDlpInfo, []byte, error) {
-	info, bb, err := ytDlp(ctx, dir, "--format", videoFormat, URL)
-	if bb != nil {
-		_ = os.WriteFile(filepath.Join(dir, info.videoInfoFile()), bb, 0o644)
-	}
-	return info, bb, err
-}
-
-func ytDlp(ctx context.Context, dir string, args ...string) (*YtDlpInfo, []byte, error) {
-	args = append(commonArgs, args...)
-	command := exec.CommandContext(ctx, ytDlpExec, args...)
+	command := exec.CommandContext(ctx, ytDlpExec, aa...)
 	command.Dir = dir
 	outBuff := &bytes.Buffer{}
 	errBuff := &bytes.Buffer{}
@@ -213,22 +198,18 @@ func ytDlp(ctx context.Context, dir string, args ...string) (*YtDlpInfo, []byte,
 	command.Stderr = errBuff
 
 	err := command.Run()
-	q.Q(
-		err,
-		command.Path,
-		command.Args,
-		outBuff.String(),
-		errBuff.String(),
-	)
+	di := DownloadInfo{
+		Path:   command.Path,
+		Args:   command.Args,
+		Stdout: outBuff.String(),
+		Stderr: errBuff.String(),
+	}
 	if err != nil {
 		commandErr := &CommandError{
-			Cause:  err,
-			Path:   command.Path,
-			Args:   command.Args,
-			Stdout: outBuff.String(),
-			Stderr: errBuff.String(),
+			DownloadInfo: di,
+			Cause:        err,
 		}
-		return nil, nil, commandErr
+		return nil, di, commandErr
 	}
 
 	bb := outBuff.Bytes()
@@ -236,5 +217,10 @@ func ytDlp(ctx context.Context, dir string, args ...string) (*YtDlpInfo, []byte,
 	info := new(YtDlpInfo)
 	err = json.Unmarshal(bb, info)
 
-	return info, bb, err
+	if err == nil {
+		_ = os.WriteFile(filepath.Join(dir, info.infoFile(format)), []byte(di.Stdout), 0o644)
+		_ = os.WriteFile(filepath.Join(dir, info.infoFile(format+".err")), []byte(di.Stderr), 0o644)
+	}
+
+	return info, di, err
 }

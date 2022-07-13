@@ -65,7 +65,7 @@ func processUpdate(ctx context.Context, botAPI *tgbotapi.BotAPI, update tgbotapi
 			lg.Error().Err(err).Msg("Error while sending announce message")
 		}
 	default:
-		mediadl.NewExtractor(botAPI, cfgMediaDir, cfgServerPrefix+cfgStaticPrefix).Extract(ctx, &update)
+		mediadl.NewExtractor(botAPI, cfgMediaDir, cfgServerPrefix+cfgStaticPrefix, botAPI.Self.ID).Extract(ctx, &update)
 	}
 	lg.Info().Msg("Update processed")
 }
