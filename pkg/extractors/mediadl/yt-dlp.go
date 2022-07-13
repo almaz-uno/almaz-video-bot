@@ -163,7 +163,7 @@ const (
 )
 
 var commonArgs = []string{
-	//"--write-info-json",
+	"--no-colors",
 	"--no-simulate",
 	"--quiet",
 	"--dump-single-json",
