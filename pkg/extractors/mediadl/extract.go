@@ -72,6 +72,8 @@ func (extractor *Extractor) Extract(ctx context.Context, update *tgbotapi.Update
 	replyTo := message.MessageID
 	chatID := message.Chat.ID
 
+	lg = lg.With().Int64("chat-id", chatID).Int64("reply-to-id", int64(replyTo)).Logger()
+
 	URLs := regexpURL.FindAllString(text, -1)
 
 	for _, e := range message.CaptionEntities {
