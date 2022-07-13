@@ -188,7 +188,7 @@ var commonArgs = []string{
 	"--quiet",
 	"--dump-single-json",
 	"-o",
-	"%(title.:" + titleLength + ")32s-%(id)s.%(ext)s",
+	"%(title.:" + titleLength + ")s-%(id)s.%(ext)s",
 }
 
 func YtDlp(ctx context.Context, dir, format string, args ...string) (*YtDlpInfo, DownloadInfo, error) {
