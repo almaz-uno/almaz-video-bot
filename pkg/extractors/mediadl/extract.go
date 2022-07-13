@@ -3,7 +3,6 @@ package mediadl
 import (
 	"context"
 	"net/url"
-	"reflect"
 	"regexp"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -77,7 +76,7 @@ func (extractor *Extractor) Extract(ctx context.Context, update *tgbotapi.Update
 			info, ytDlpRaw, e := f(ctx, extractor.wd, u)
 			lgg := lgu.With().
 				Str("url", u).
-				Str("action", reflect.TypeOf(f).Name()).
+				Str("format-id", info.FormatID).
 				Logger()
 
 			lgg.Debug().Msg("Processing URL...")

@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/ryboe/q"
 )
 
 type (
@@ -211,6 +213,13 @@ func ytDlp(ctx context.Context, dir string, args ...string) (*YtDlpInfo, []byte,
 	command.Stderr = errBuff
 
 	err := command.Run()
+	q.Q(
+		err,
+		command.Path,
+		command.Args,
+		outBuff.String(),
+		errBuff.String(),
+	)
 	if err != nil {
 		commandErr := &CommandError{
 			Cause:  err,
