@@ -100,9 +100,7 @@ func doMain(runFunc func(ctx context.Context, cancel context.CancelFunc) error) 
 		close(retChan)
 	}()
 
-	// Слушаем сигналы завершения от ОС. В разных ОС они работают по-разному.
-	// При поступлении завершающего сигнала ОС по контексту исполнения
-	// передаёт сигнал останова для изящного завершения
+	// Waiting signals from OS
 	go func() {
 		quit := make(chan os.Signal, 10)
 		signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
