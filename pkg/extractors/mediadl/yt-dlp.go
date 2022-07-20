@@ -147,15 +147,6 @@ const (
 	titleLength = "64"
 )
 
-// var commonArgs = []string{
-// 	"--no-colors",
-// 	"--no-simulate",
-// 	"--quiet",
-// 	"--dump-single-json",
-// 	"-o",
-// 	"%(title.:" + titleLength + ")s-%(id)s.%(ext)s",
-// }
-
 // YtDlp prepares yt-dlp and returns appropriate *exec.Cmd object for using it with Run() or Start()
 func YtDlp(ctx context.Context, dir string, args ...string) *exec.Cmd {
 	command := exec.CommandContext(ctx, ytDlpExec, args...)
