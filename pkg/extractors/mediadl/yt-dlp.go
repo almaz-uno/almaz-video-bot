@@ -3,11 +3,8 @@ package mediadl
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
 
@@ -77,64 +74,38 @@ type (
 		Fulltitle          string      `json:"fulltitle,omitempty"`
 		RequestedSubtitles interface{} `json:"requested_subtitles,omitempty"`
 		HasDrm             interface{} `json:"_has_drm,omitempty"`
-		RequestedDownloads []struct {
-			FormatID     string  `json:"format_id,omitempty"`
-			URL          string  `json:"url,omitempty"`
-			ManifestURL  string  `json:"manifest_url,omitempty"`
-			Tbr          float64 `json:"tbr,omitempty"`
-			Ext          string  `json:"ext,omitempty"`
-			Fps          float64 `json:"fps,omitempty"`
-			Protocol     string  `json:"protocol,omitempty"`
-			Width        int     `json:"width,omitempty"`
-			Height       int     `json:"height,omitempty"`
-			Vcodec       string  `json:"vcodec,omitempty"`
-			Acodec       string  `json:"acodec,omitempty"`
-			DynamicRange string  `json:"dynamic_range,omitempty"`
-			VideoExt     string  `json:"video_ext,omitempty"`
-			AudioExt     string  `json:"audio_ext,omitempty"`
-			Vbr          float64 `json:"vbr,omitempty"`
-			Abr          float64 `json:"abr,omitempty"`
-			Format       string  `json:"format,omitempty"`
-			Resolution   string  `json:"resolution,omitempty"`
-			HTTPHeaders  struct {
-				UserAgent      string `json:"User-Agent,omitempty"`
-				Accept         string `json:"Accept,omitempty"`
-				AcceptLanguage string `json:"Accept-Language,omitempty"`
-				SecFetchMode   string `json:"Sec-Fetch-Mode,omitempty"`
-			} `json:"http_headers,omitempty"`
-			Epoch                int    `json:"epoch,omitempty"`
-			Filename             string `json:"_filename,omitempty"`
-			WriteDownloadArchive bool   `json:"__write_download_archive,omitempty"`
-		} `json:"requested_downloads,omitempty"`
-		FormatID     string      `json:"format_id,omitempty"`
-		FormatIndex  interface{} `json:"format_index,omitempty"`
-		URL          string      `json:"url,omitempty"`
-		ManifestURL  string      `json:"manifest_url,omitempty"`
-		Tbr          float64     `json:"tbr,omitempty"`
-		Ext          string      `json:"ext,omitempty"`
-		Fps          float64     `json:"fps,omitempty"`
-		Protocol     string      `json:"protocol,omitempty"`
-		Preference   interface{} `json:"preference,omitempty"`
-		Quality      interface{} `json:"quality,omitempty"`
-		Width        int         `json:"width,omitempty"`
-		Height       int         `json:"height,omitempty"`
-		Vcodec       string      `json:"vcodec,omitempty"`
-		Acodec       string      `json:"acodec,omitempty"`
-		DynamicRange string      `json:"dynamic_range,omitempty"`
-		VideoExt     string      `json:"video_ext,omitempty"`
-		AudioExt     string      `json:"audio_ext,omitempty"`
-		Vbr          float64     `json:"vbr,omitempty"`
-		Abr          float64     `json:"abr,omitempty"`
-		Format       string      `json:"format,omitempty"`
-		Resolution   string      `json:"resolution,omitempty"`
-		HTTPHeaders  struct {
+		FormatID           string      `json:"format_id,omitempty"`
+		FormatIndex        interface{} `json:"format_index,omitempty"`
+		URL                string      `json:"url,omitempty"`
+		ManifestURL        string      `json:"manifest_url,omitempty"`
+		Tbr                float64     `json:"tbr,omitempty"`
+		Ext                string      `json:"ext,omitempty"`
+		Fps                float64     `json:"fps,omitempty"`
+		Protocol           string      `json:"protocol,omitempty"`
+		Preference         interface{} `json:"preference,omitempty"`
+		Quality            interface{} `json:"quality,omitempty"`
+		Width              int         `json:"width,omitempty"`
+		Height             int         `json:"height,omitempty"`
+		Vcodec             string      `json:"vcodec,omitempty"`
+		Acodec             string      `json:"acodec,omitempty"`
+		DynamicRange       string      `json:"dynamic_range,omitempty"`
+		VideoExt           string      `json:"video_ext,omitempty"`
+		AudioExt           string      `json:"audio_ext,omitempty"`
+		Vbr                float64     `json:"vbr,omitempty"`
+		Abr                float64     `json:"abr,omitempty"`
+		Format             string      `json:"format,omitempty"`
+		Resolution         string      `json:"resolution,omitempty"`
+		HTTPHeaders        struct {
 			UserAgent      string `json:"User-Agent,omitempty"`
 			Accept         string `json:"Accept,omitempty"`
 			AcceptLanguage string `json:"Accept-Language,omitempty"`
 			SecFetchMode   string `json:"Sec-Fetch-Mode,omitempty"`
 		} `json:"http_headers,omitempty"`
-		Epoch int    `json:"epoch,omitempty"`
-		Type  string `json:"_type,omitempty"`
+		Epoch     int    `json:"epoch,omitempty"`
+		Filename  string `json:"_filename,omitempty"`
+		Filename0 string `json:"filename,omitempty"`
+		Urls      string `json:"urls,omitempty"`
+		Type      string `json:"_type,omitempty"`
 	}
 
 	CommandError struct {
@@ -164,8 +135,8 @@ func (e CommandError) Unwrap() error {
 
 func (info *YtDlpInfo) infoFile(format string) string {
 	const tmpl = "%s.%s.json"
-	if len(info.RequestedDownloads) > 0 {
-		return fmt.Sprintf(tmpl, info.RequestedDownloads[0].Filename, format)
+	if len(info.Filename) > 0 {
+		return fmt.Sprintf(tmpl, info.Filename, format)
 	}
 	return fmt.Sprintf(tmpl, info.ID, format)
 }
@@ -176,56 +147,22 @@ const (
 	titleLength = "64"
 )
 
-const (
-	VideoFormat     = "best[height<=480]/best"
-	VideoBestFormat = "best"
-	AudioOnlyFormat = "bestaudio"
-)
+// var commonArgs = []string{
+// 	"--no-colors",
+// 	"--no-simulate",
+// 	"--quiet",
+// 	"--dump-single-json",
+// 	"-o",
+// 	"%(title.:" + titleLength + ")s-%(id)s.%(ext)s",
+// }
 
-var commonArgs = []string{
-	"--no-colors",
-	"--no-simulate",
-	"--quiet",
-	"--dump-single-json",
-	"-o",
-	"%(title.:" + titleLength + ")s-%(id)s.%(ext)s",
-}
-
-func YtDlp(ctx context.Context, dir, format string, args ...string) (*YtDlpInfo, DownloadInfo, error) {
-	aa := append(commonArgs, "--format", format)
-	aa = append(aa, args...)
-
-	command := exec.CommandContext(ctx, ytDlpExec, aa...)
+// YtDlp prepares yt-dlp and returns appropriate *exec.Cmd object for using it with Run() or Start()
+func YtDlp(ctx context.Context, dir string, args ...string) *exec.Cmd {
+	command := exec.CommandContext(ctx, ytDlpExec, args...)
 	command.Dir = dir
-	outBuff := &bytes.Buffer{}
-	errBuff := &bytes.Buffer{}
-	command.Stdout = outBuff
-	command.Stderr = errBuff
 
-	err := command.Run()
-	di := DownloadInfo{
-		Path:   command.Path,
-		Args:   command.Args,
-		Stdout: outBuff.String(),
-		Stderr: errBuff.String(),
-	}
-	if err != nil {
-		commandErr := &CommandError{
-			DownloadInfo: di,
-			Cause:        err,
-		}
-		return nil, di, commandErr
-	}
+	command.Stdout = &bytes.Buffer{}
+	command.Stderr = &bytes.Buffer{}
 
-	bb := outBuff.Bytes()
-
-	info := new(YtDlpInfo)
-	err = json.Unmarshal(bb, info)
-
-	if err == nil {
-		_ = os.WriteFile(filepath.Join(dir, info.infoFile(info.FormatID)), []byte(di.Stdout), 0o644)
-		_ = os.WriteFile(filepath.Join(dir, info.infoFile(info.FormatID+".err")), []byte(di.Stderr), 0o644)
-	}
-
-	return info, di, err
+	return command
 }

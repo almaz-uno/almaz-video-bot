@@ -15,18 +15,20 @@ import (
 // DispatchLoop executes main processing loop for the bot
 // https://core.telegram.org/bots/api
 func loop(ctx context.Context, token string) error {
-	bot, err := tgbotapi.NewBotAPI(token)
+	botAPI, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		return fmt.Errorf("unable to acquire Telegram bot API: %w", err)
 	}
-	bot.Debug = false
+	botAPI.Debug = false
 
-	log.Info().Msgf("Authorized on account %s", bot.Self.UserName)
+	log.Info().Msgf("Authorized on account %s", botAPI.Self.UserName)
+
+	extractor := mediadl.NewExtractor(botAPI, cfgMediaDir, cfgServerPrefix+cfgStaticPrefix, botAPI.Self.ID)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	updates := bot.GetUpdatesChan(u)
+	updates := botAPI.GetUpdatesChan(u)
 
 	for {
 		select {
@@ -36,19 +38,21 @@ func loop(ctx context.Context, token string) error {
 		case update := <-updates:
 			bb, _ := json.MarshalIndent(update, "  ", "  ")
 			q.Q("raw update is", string(bb))
-			go processUpdate(ctx, bot, update)
+			go processUpdate(ctx, botAPI, update, extractor)
 		}
 	}
 }
 
 const announceText = `
-To get video and audio from supported resources, please send video link to the this bot.
-Bot will download video (and audio if supported) with https://github.com/yt-dlp/yt-dlp and return link to this.
+To get video and audio from supported resources, please send video or audio link to this bot.
+Bot will extracts multimedia URLs from message if any. It will provide appropriate possibilities for media downloading.
+
+Downloading provided by great tool https://github.com/yt-dlp/yt-dlp.
 
 You can inspect source codes of this bot in: https://github.com/almaz-uno/almaz-video-bot
 `
 
-func processUpdate(ctx context.Context, botAPI *tgbotapi.BotAPI, update tgbotapi.Update) {
+func processUpdate(ctx context.Context, botAPI *tgbotapi.BotAPI, update tgbotapi.Update, extractor *mediadl.Extractor) {
 	lg := log.With().Int("updateID", update.UpdateID).Logger()
 	lg.Debug().Msg("Update processing...")
 
@@ -61,11 +65,11 @@ func processUpdate(ctx context.Context, botAPI *tgbotapi.BotAPI, update tgbotapi
 			lg.Warn().Err(e).Msg("Unable to stop current process")
 		}
 	case update.Message != nil && update.Message.Text == "/start":
-		if _, err := botAPI.Send(tgbotapi.NewMessage(update.Message.Chat.ID, announceText)); err != nil {
-			lg.Error().Err(err).Msg("Error while sending announce message")
+		if _, e := botAPI.Send(tgbotapi.NewMessage(update.Message.Chat.ID, announceText)); e != nil {
+			lg.Error().Err(e).Msg("Error while sending announce message")
 		}
 	default:
-		mediadl.NewExtractor(botAPI, cfgMediaDir, cfgServerPrefix+cfgStaticPrefix, botAPI.Self.ID).Extract(ctx, &update)
+		extractor.ProcessUpdate(ctx, &update)
 	}
 	lg.Info().Msg("Update processed")
 }
