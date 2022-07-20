@@ -143,8 +143,7 @@ func (info *YtDlpInfo) infoFile(format string) string {
 
 // https://ostechnix.com/youtube-dl-tutorial-with-examples-for-beginners/
 const (
-	ytDlpExec   = "/usr/bin/yt-dlp"
-	titleLength = "64"
+	ytDlpExec = "/usr/bin/yt-dlp"
 )
 
 // YtDlp prepares yt-dlp and returns appropriate *exec.Cmd object for using it with Run() or Start()

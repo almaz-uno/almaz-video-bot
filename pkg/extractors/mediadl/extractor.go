@@ -299,8 +299,10 @@ func hrSize(filePath string) string {
 	return ""
 }
 
+const tickerInterval = 15 * time.Second
+
 func (extractor *Extractor) trackStatus(ctx context.Context, lg zerolog.Logger, buffer *bytes.Buffer, chatID int64) {
-	ticker := time.NewTicker(500 * time.Millisecond)
+	ticker := time.NewTicker(tickerInterval)
 	defer ticker.Stop()
 
 	text := buffer.String()
