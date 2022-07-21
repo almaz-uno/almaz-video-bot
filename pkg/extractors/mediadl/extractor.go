@@ -103,7 +103,7 @@ func (extractor *Extractor) ProcessUpdate(ctx context.Context, update *tgbotapi.
 		extractor.showFormats(ctx, lg, update.CallbackQuery.Message)
 		extractor.botAPI.Send(tgbotapi.NewCallback(update.CallbackQuery.ID, "Formats command processed"))
 	case repliedToMe:
-		extractor.downloadMedia(ctx, lg, update.Message.Text, update.Message)
+		extractor.downloadMedia(ctx, lg, update.Message.Text, update.Message.ReplyToMessage)
 	case update.Message != nil:
 		extractor.extractMediaLinks(ctx, lg, update.Message)
 	case update.EditedMessage != nil:
@@ -244,7 +244,7 @@ func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger
 		lgd := lg.With().Str("url", info.WebpageURL).Logger()
 
 		mc := tgbotapi.NewMessage(message.Chat.ID, "📀 ⇒ Downloading <b>"+htmlReplacer.Replace(info.Filename)+"</b>...")
-		mc.ReplyToMessageID = message.ReplyToMessage.MessageID
+		mc.ReplyToMessageID = message.MessageID
 		mc.DisableWebPagePreview = true
 		mc.ParseMode = "HTML"
 		dm, err := extractor.botAPI.Send(mc)
