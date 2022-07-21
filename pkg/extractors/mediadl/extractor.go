@@ -202,7 +202,7 @@ const outputFileFormat = `%(uploader.:32)s • %(title.:64)s • %(id)s.%(format
 
 func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger, format string, message *tgbotapi.Message) {
 	format = strings.TrimSpace(format)
-	URLs := extractURLs(message.ReplyToMessage)
+	URLs := extractURLs(message)
 
 	if len(URLs) != 1 {
 		lg.Warn().Strs("urls", URLs).Msgf("Must be only ONE URLs, but found %d", len(URLs))
@@ -370,7 +370,7 @@ func compactWithCR(src []byte) []byte {
 }
 
 func (extractor *Extractor) showFormats(ctx context.Context, lg zerolog.Logger, message *tgbotapi.Message) {
-	URLs := extractURLs(message.ReplyToMessage)
+	URLs := extractURLs(message)
 
 	if len(URLs) != 1 {
 		lg.Warn().Strs("urls", URLs).Msgf("Must be only ONE URLs, but found %d", len(URLs))
