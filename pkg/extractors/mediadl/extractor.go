@@ -299,7 +299,7 @@ func hrSize(filePath string) string {
 	return ""
 }
 
-const tickerInterval = 15 * time.Second
+const tickerInterval = 10 * time.Second
 
 func (extractor *Extractor) trackStatus(ctx context.Context, lg zerolog.Logger, buffer *bytes.Buffer, chatID int64) {
 	ticker := time.NewTicker(tickerInterval)
@@ -328,21 +328,11 @@ func (extractor *Extractor) trackStatus(ctx context.Context, lg zerolog.Logger, 
 			return
 		case <-ticker.C:
 
-			bb := buffer.Bytes()
-			pos := 0
-			for i := len(bb) - 1; i >= 0; i-- {
-				if bb[i] == '\r' {
-					pos = i
-					break
-				}
-			}
-
-			bb = bb[pos:]
-
-			if len(bb) == 0 || text == string(bb) {
+			outputText := string(compactWithCR(buffer.Bytes()))
+			if len(outputText) == 0 || text == outputText {
 				continue
 			}
-			text = string(bb)
+			text = outputText
 			q.Q(text)
 			em := tgbotapi.NewEditMessageText(chatID, statusMessage.MessageID, `<pre><code>`+text+`</code></pre>`)
 			em.ParseMode = "HTML"
@@ -353,6 +343,30 @@ func (extractor *Extractor) trackStatus(ctx context.Context, lg zerolog.Logger, 
 			}
 		}
 	}
+}
+
+// compact text with CR support (like any terminal this does)
+func compactWithCR(src []byte) []byte {
+	result := []byte{}
+
+	if len(src) == 0 {
+		return result
+	}
+
+	from := 0
+	for i := range src {
+		if src[i] == '\n' {
+			result = append(result, src[from:i+1]...)
+			from = i + 1
+			continue
+		}
+		if src[i] == '\r' {
+			from = i + 1
+			continue
+		}
+	}
+
+	return append(result, src[from:]...)
 }
 
 func (extractor *Extractor) showFormats(ctx context.Context, lg zerolog.Logger, message *tgbotapi.Message) {
