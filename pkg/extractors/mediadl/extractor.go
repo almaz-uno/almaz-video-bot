@@ -273,7 +273,7 @@ func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger
 			cancelDownload()
 			hrSize := hrSize(filepath.Join(extractor.wd, info.Filename))
 			lgd.Info().Stringer("cmdDownload", cmdDownload).Msg("Successfully downloaded")
-			emtc = tgbotapi.NewEditMessageText(dm.Chat.ID, dm.MessageID, `💾 ⇒ Downloaded <b>`+htmlReplacer.Replace(info.Filename)+" "+hrSize+"</b>")
+			emtc = tgbotapi.NewEditMessageText(dm.Chat.ID, dm.MessageID, `💾 ⇒ Downloaded <b>`+htmlReplacer.Replace(info.Filename)+"</b> "+hrSize)
 			mu := tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL(
