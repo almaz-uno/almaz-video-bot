@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_humanReadableFileSize(t *testing.T) {
+func Test_FileSizeHumanReadable(t *testing.T) {
 	type args struct {
 		size int64
 	}
@@ -52,7 +52,7 @@ func Test_humanReadableFileSize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := humanReadableFileSize(tt.args.size); got != tt.want {
+			if got := FileSizeHumanReadable(tt.args.size); got != tt.want {
 				t.Errorf("humanReadableFileSize() = %v, want %v", got, tt.want)
 			}
 		})

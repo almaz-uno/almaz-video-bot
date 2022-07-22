@@ -52,9 +52,15 @@ Downloading provided by great tool https://github.com/yt-dlp/yt-dlp.
 You can inspect source codes of this bot in: https://github.com/almaz-uno/almaz-video-bot
 `
 
+var privateText = `
+Link to all videos: ` + cfgServerPrefix + "/list" + `
+`
+
 func processUpdate(ctx context.Context, botAPI *tgbotapi.BotAPI, update tgbotapi.Update, extractor *mediadl.Extractor) {
 	lg := log.With().Int("updateID", update.UpdateID).Logger()
 	lg.Debug().Msg("Update processing...")
+
+	isPrivate := update.SentFrom() != nil && update.SentFrom().ID == 180727105
 
 	switch {
 	case update.Message != nil && update.Message.Text == "/stop":
@@ -65,7 +71,13 @@ func processUpdate(ctx context.Context, botAPI *tgbotapi.BotAPI, update tgbotapi
 			lg.Warn().Err(e).Msg("Unable to stop current process")
 		}
 	case update.Message != nil && update.Message.Text == "/start":
-		if _, e := botAPI.Send(tgbotapi.NewMessage(update.Message.Chat.ID, announceText)); e != nil {
+
+		t := announceText
+		if isPrivate {
+			t += privateText
+		}
+
+		if _, e := botAPI.Send(tgbotapi.NewMessage(update.Message.Chat.ID, t)); e != nil {
 			lg.Error().Err(e).Msg("Error while sending announce message")
 		}
 	default:

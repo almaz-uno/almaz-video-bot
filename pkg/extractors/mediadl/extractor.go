@@ -187,7 +187,7 @@ func (extractor *Extractor) publishFound(ctx context.Context, lg zerolog.Logger,
 	chatID := message.Chat.ID
 
 	// maybe info.OriginalURL ? 🤔
-	mc := tgbotapi.NewMessage(chatID, `<a href="`+info.WebpageURL+`">🎥 ⇒ `+htmlReplacer.Replace(info.Title)+`</a>`)
+	mc := tgbotapi.NewMessage(chatID, `<a href="`+info.WebpageURL+`">🎥 ⇒ `+htmlReplacer.Replace(info.ExtractorKey+": "+info.Title)+`</a>`)
 	mc.ReplyToMessageID = replyTo
 	mc.ParseMode = "HTML"
 	mc.DisableWebPagePreview = true
@@ -294,7 +294,7 @@ func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger
 
 func hrSize(filePath string) string {
 	if st, e := os.Stat(filePath); e == nil {
-		return humanReadableFileSize(st.Size())
+		return FileSizeHumanReadable(st.Size())
 	}
 	return ""
 }
@@ -415,7 +415,7 @@ var metrics = map[string]int64{
 	"Tb": 1024 * 1024 * 1024 * 1024,
 }
 
-func humanReadableFileSize(size int64) string {
+func FileSizeHumanReadable(size int64) string {
 	for _, m := range []string{"Tb", "Gb", "Mb", "Kb"} {
 		if size >= metrics[m] {
 			return fmt.Sprintf("%.1f%s", float64(float64(size)/float64(metrics[m])), m)

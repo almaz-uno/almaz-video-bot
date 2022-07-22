@@ -3,13 +3,18 @@ package main
 import (
 	"context"
 	"errors"
+	"html/template"
+	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
+	"almaz.uno/dev/almaz-video-bot/pkg/extractors/mediadl"
 	"almaz.uno/dev/almaz-video-bot/pkg/loghook"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -56,6 +61,7 @@ func main() {
 
 	ec := echo.New()
 	ec.Static(cfgStaticPrefix, cfgMediaDir)
+	ec.GET("/list", list)
 
 	doMain(func(ctx context.Context, cancel context.CancelFunc) error {
 		go func() {
@@ -112,4 +118,135 @@ func doMain(runFunc func(ctx context.Context, cancel context.CancelFunc) error) 
 	for e := range retChan {
 		log.Info().Err(e).Msg("Exiting.")
 	}
+}
+
+const tmplList = `
+<html>
+	<head>
+		<title>File list</title>
+	</head>
+
+	<body>
+		<table>
+			<tr>
+				<th>File</th>
+				<th>Size</th>
+				<th>MTime</th>
+				<th>CTime</th>
+				<th>ATime</th>
+			</tr>
+			{{range .files}}
+			<tr>
+				<td><a href="{{.URL}}">{{.Name}}</a></td>
+				<td>{{.SizeStr}}</td>
+				<td>{{.MTimeAgo}}</td>
+				<td>{{.CTimeAgo}}</td>
+				<td>{{.ATimeAgo}}</td>
+			</tr>
+			{{else}}
+			there no files yet
+			{{end}}
+		</table>
+	</body>
+</html>
+`
+
+const timeFormat = "2006-01-02 15:04:05Z07:00"
+
+type fileInfo struct {
+	d   fs.DirEntry
+	URL string
+}
+
+func (fi fileInfo) Name() string {
+	return fi.d.Name()
+}
+
+func (fi fileInfo) SizeStr() string {
+	return mediadl.FileSizeHumanReadable(fi.Size())
+}
+
+func (fi fileInfo) ATimeAgo() time.Duration {
+	return time.Duration(time.Since(fi.ATime()).Seconds()) * time.Second
+}
+
+func (fi fileInfo) CTimeAgo() time.Duration {
+	return time.Duration(time.Since(fi.CTime()).Seconds()) * time.Second
+}
+
+func (fi fileInfo) MTimeAgo() time.Duration {
+	return time.Duration(time.Since(fi.MTime()).Seconds()) * time.Second
+}
+
+func (fi fileInfo) ATimeStr() string {
+	return fi.ATime().Format(timeFormat)
+}
+
+func (fi fileInfo) CTimeStr() string {
+	return fi.CTime().Format(timeFormat)
+}
+
+func (fi fileInfo) MTimeStr() string {
+	return fi.MTime().Format(timeFormat)
+}
+
+func (fi fileInfo) MTime() time.Time {
+	i, err := fi.d.Info()
+	if err != nil {
+		log.Warn().Err(err).Str("file", fi.d.Name()).
+			Msg("Unable to get file info")
+		return time.Time{}
+	}
+	return i.ModTime()
+}
+
+func (fi fileInfo) ATime() time.Time {
+	i, err := fi.d.Info()
+	if err != nil {
+		log.Warn().Err(err).Str("file", fi.d.Name()).
+			Msg("Unable to get file info")
+		return time.Time{}
+	}
+	stat := i.Sys().(*syscall.Stat_t)
+	return time.Unix(int64(stat.Atim.Sec), int64(stat.Atim.Nsec))
+}
+
+func (fi fileInfo) CTime() time.Time {
+	i, err := fi.d.Info()
+	if err != nil {
+		log.Warn().Err(err).Str("file", fi.d.Name()).
+			Msg("Unable to get file info")
+		return time.Time{}
+	}
+	stat := i.Sys().(*syscall.Stat_t)
+	return time.Unix(int64(stat.Ctim.Sec), int64(stat.Ctim.Nsec))
+}
+
+func (fi fileInfo) Size() int64 {
+	i, err := fi.d.Info()
+	if err != nil {
+		log.Warn().Err(err).Str("file", fi.d.Name()).
+			Msg("Unable to get file info")
+		return 0
+	}
+	return i.Size()
+}
+
+func list(c echo.Context) error {
+	files := []fileInfo{}
+	filepath.WalkDir(cfgMediaDir, func(path string, d fs.DirEntry, err error) error {
+		if d.Type().IsRegular() {
+			files = append(files, fileInfo{
+				d:   d,
+				URL: cfgServerPrefix + cfgStaticPrefix + url.PathEscape(d.Name()),
+			})
+		}
+		return nil
+	})
+
+	context := map[string]any{
+		"files": files,
+	}
+
+	return template.Must(template.New("list").Parse(tmplList)).Execute(c.Response().Writer, context)
 }
