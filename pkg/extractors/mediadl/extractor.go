@@ -174,7 +174,7 @@ var mediaMarkup = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("best", commandDownload+""),
 		tgbotapi.NewInlineKeyboardButtonData("ba", commandDownload+"bestaudio"),
-		tgbotapi.NewInlineKeyboardButtonData("worst", commandDownload+"worst"),
+		tgbotapi.NewInlineKeyboardButtonData("worst", commandDownload+"worst[ext=mp4]"),
 		tgbotapi.NewInlineKeyboardButtonData("wa", commandDownload+"worstaudio"),
 		tgbotapi.NewInlineKeyboardButtonData("List formats", commandFormats),
 	),
