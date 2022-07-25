@@ -1,0 +1,42 @@
+<html>
+	<head>
+		<title>{{len .files}} files</title>
+
+		<style type="text/css">
+
+		table, th, td {
+			border: 1px solid blue;
+			border-collapse: collapse; 
+		}		
+
+		</style>
+
+	</head>
+
+	<body>
+		<table >
+			<tr>
+				<th>File</th>
+				<th>Download</th>
+				<th>Size</th>
+				<th>MTime</th>
+				<th>CTime</th>
+				<th>ATime</th>
+			</tr>
+			{{range .files}}
+			<tr>
+				<td><a href="{{.LinksURL}}">{{.Name}}</a></td>
+				<td><a href="{{.URL}}"><img src="data:image/svg+xml;utf8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyLDJBMTAsMTAsMCwxLDAsMjIsMTIsMTAsMTAsMCwwLDAsMTIsMlpNOS43MSwxMC4yOSwxMSwxMS41OVY2aDJ2NS41OWwxLjI5LTEuMjksMS40MSwxLjQxTDEyLDE1LjQxLDguMjksMTEuNzFaTTE2LDE4SDhWMTZoOFoiIGRhdGEtbmFtZT0iTGF5ZXIgMiIvPjwvc3ZnPg=="></img></a></td>
+				<td>{{.SizeStr}}</td>
+				<td>{{.MTimeAgo}}</td>
+				<td>{{.CTimeAgo}}</td>
+				<td>{{.ATimeAgo}}</td>
+			</tr>
+			{{else}}
+			there no files yet
+			{{end}}
+		</table>
+	</body>
+</html>
+
+<!-- 🎬 download -->

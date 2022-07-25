@@ -23,7 +23,12 @@ func loop(ctx context.Context, token string) error {
 
 	log.Info().Msgf("Authorized on account %s", botAPI.Self.UserName)
 
-	extractor := mediadl.NewExtractor(botAPI, cfgMediaDir, cfgServerPrefix+cfgStaticPrefix, botAPI.Self.ID)
+	extractor := mediadl.NewExtractor(
+		botAPI,
+		cfgMediaDir,
+		cfgServerPrefix+cfgStaticPrefix,
+		cfgServerPrefix+"/links/",
+		botAPI.Self.ID)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60

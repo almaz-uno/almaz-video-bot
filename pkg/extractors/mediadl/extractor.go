@@ -21,10 +21,11 @@ import (
 type (
 	// Extractor is multithreading updates processor
 	Extractor struct {
-		botAPI    *tgbotapi.BotAPI
-		wd        string
-		urlPrefix string
-		me        int64
+		botAPI      *tgbotapi.BotAPI
+		wd          string
+		urlPrefix   string
+		linksPrefix string
+		me          int64
 	}
 
 	botCommand byte
@@ -63,12 +64,13 @@ func newButtonData(command botCommand, data string) buttonData {
 	return buttonData(string(command) + data)
 }
 
-func NewExtractor(botAPI *tgbotapi.BotAPI, wd, urlPrefix string, me int64) *Extractor {
+func NewExtractor(botAPI *tgbotapi.BotAPI, wd, urlPrefix, linksPrefix string, me int64) *Extractor {
 	return &Extractor{
-		botAPI:    botAPI,
-		wd:        wd,
-		urlPrefix: urlPrefix,
-		me:        me,
+		botAPI:      botAPI,
+		wd:          wd,
+		urlPrefix:   urlPrefix,
+		linksPrefix: linksPrefix,
+		me:          me,
 	}
 }
 
@@ -171,13 +173,9 @@ func (extractor *Extractor) extractMediaLinks(ctx context.Context, lg zerolog.Lo
 var mediaMarkup = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("best", commandDownload+""),
-		tgbotapi.NewInlineKeyboardButtonData("bestaudio", commandDownload+"bestaudio"),
-	),
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("best[height<=480]", commandDownload+"best[height<=480]"),
-		tgbotapi.NewInlineKeyboardButtonData("best[width<=640]", commandDownload+"best[width<=640]"),
-	),
-	tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("ba", commandDownload+"bestaudio"),
+		tgbotapi.NewInlineKeyboardButtonData("worst", commandDownload+"worst"),
+		tgbotapi.NewInlineKeyboardButtonData("wa", commandDownload+"worstaudio"),
 		tgbotapi.NewInlineKeyboardButtonData("List formats", commandFormats),
 	),
 )
@@ -273,12 +271,17 @@ func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger
 			cancelDownload()
 			hrSize := hrSize(filepath.Join(extractor.wd, info.Filename))
 			lgd.Info().Stringer("cmdDownload", cmdDownload).Msg("Successfully downloaded")
-			emtc = tgbotapi.NewEditMessageText(dm.Chat.ID, dm.MessageID, `💾 ⇒ Downloaded <b>`+htmlReplacer.Replace(info.Filename)+"</b> "+hrSize)
+			tgtURL := extractor.urlPrefix + url.PathEscape(info.Filename)
+			linksURL := extractor.linksPrefix + "" + url.PathEscape(info.Filename)
+			emtc = tgbotapi.NewEditMessageText(dm.Chat.ID, dm.MessageID, `<a href="`+linksURL+`">🎯 ⇒ Downloaded <b>`+htmlReplacer.Replace(info.Filename)+"</b></a> "+hrSize)
 			mu := tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL(
-						info.Ext+": "+info.Resolution,
-						extractor.urlPrefix+url.PathEscape(info.Filename)),
+						"🎬 "+info.Ext+": "+info.Resolution,
+						tgtURL),
+					tgbotapi.NewInlineKeyboardButtonURL(
+						"🎯 "+info.Ext+": "+info.Resolution,
+						linksURL),
 				))
 			emtc.ReplyMarkup = &mu
 		}
