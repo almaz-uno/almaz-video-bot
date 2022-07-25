@@ -119,6 +119,8 @@ func (extractor *Extractor) ProcessUpdate(ctx context.Context, update *tgbotapi.
 func extractURLs(message *tgbotapi.Message) []string {
 	URLs := regexpURL.FindAllString(message.Text, -1)
 
+	URLs = append(URLs, regexpURL.FindAllString(message.Caption, -1)...)
+
 	for _, e := range message.CaptionEntities {
 		if e.URL != "" {
 			URLs = append(URLs, e.URL)
