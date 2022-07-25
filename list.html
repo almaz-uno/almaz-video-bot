@@ -18,6 +18,7 @@
 			<tr>
 				<th>File</th>
 				<th>Download</th>
+				<th>Copy</th>
 				<th>Size</th>
 				<th>MTime</th>
 				<th>CTime</th>
@@ -27,6 +28,7 @@
 			<tr>
 				<td><a href="{{.LinksURL}}">{{.Name}}</a></td>
 				<td><a href="{{.URL}}"><img src="data:image/svg+xml;utf8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyLDJBMTAsMTAsMCwxLDAsMjIsMTIsMTAsMTAsMCwwLDAsMTIsMlpNOS43MSwxMC4yOSwxMSwxMS41OVY2aDJ2NS41OWwxLjI5LTEuMjksMS40MSwxLjQxTDEyLDE1LjQxLDguMjksMTEuNzFaTTE2LDE4SDhWMTZoOFoiIGRhdGEtbmFtZT0iTGF5ZXIgMiIvPjwvc3ZnPg=="></img></a></td>
+				<td><a href="#" onclick="copyText('{{.URL}}')"><img src="data:image/svg+xml,%3Csvg class='svg-icon' style='width: 1em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;' viewBox='0 0 1024 1024' version='1.1' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M930.909091 884.363636 930.909091 0 232.727273 0 232.727273 93.090909 837.818182 93.090909 837.818182 884.363636Z' /%3E%3Cpath d='M93.090909 149.410909l0 864.814545C93.090909 1019.624727 97.373091 1024 102.679273 1024l678.958545 0C786.990545 1024 791.272727 1019.671273 791.272727 1014.225455L791.272727 149.410909C791.272727 144.011636 786.990545 139.636364 781.684364 139.636364L102.679273 139.636364C97.373091 139.636364 93.090909 143.965091 93.090909 149.410909zM186.181818 279.272727l512 0 0 46.545455L186.181818 325.818182 186.181818 279.272727zM186.181818 418.909091l512 0 0 46.545455L186.181818 465.454545 186.181818 418.909091zM186.181818 558.545455l512 0 0 46.545455L186.181818 605.090909 186.181818 558.545455zM186.181818 698.181818l512 0 0 46.545455L186.181818 744.727273 186.181818 698.181818zM186.181818 837.818182l325.818182 0 0 46.545455L186.181818 884.363636 186.181818 837.818182z' /%3E%3C/svg%3E%0A"></img></a></td>
 				<td>{{.SizeStr}}</td>
 				<td>{{.MTimeAgo}}</td>
 				<td>{{.CTimeAgo}}</td>
@@ -36,6 +38,13 @@
 			there no files yet
 			{{end}}
 		</table>
+
+		<script>
+			function copyText(text) {
+				navigator.clipboard.writeText(text);
+			}
+		</script>
+
 	</body>
 </html>
 
