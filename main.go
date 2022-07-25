@@ -128,8 +128,6 @@ var tmplList string
 //go:embed links.html
 var tmplLinks string
 
-// 🎥🎬💾
-
 func list(c echo.Context) error {
 	files := []fileInfo{}
 	filepath.WalkDir(cfgMediaDir, func(path string, d fs.DirEntry, err error) error {

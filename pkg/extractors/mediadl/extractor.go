@@ -279,9 +279,6 @@ func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger
 					tgbotapi.NewInlineKeyboardButtonURL(
 						"🎬 "+info.Ext+": "+info.Resolution,
 						tgtURL),
-					tgbotapi.NewInlineKeyboardButtonURL(
-						"🎯 "+info.Ext+": "+info.Resolution,
-						linksURL),
 				))
 			emtc.ReplyMarkup = &mu
 		}
