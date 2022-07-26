@@ -13,6 +13,7 @@ docker run -d \
     -v /mnt/almaz-extractor-bot:/var/almaz-extractor-bot \
     -v /root/.acme.sh:/root/.acme.sh \
     --restart=unless-stopped \
+    --privileged \
     -p $PORT_REDIRECT \
     $APP_NAME \
 
