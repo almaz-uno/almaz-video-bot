@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -139,6 +140,10 @@ func list(c echo.Context) error {
 			})
 		}
 		return nil
+	})
+
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].ATime().After(files[j].ATime())
 	})
 
 	context := map[string]any{
