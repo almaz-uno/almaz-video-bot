@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -21,6 +20,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/ryboe/q"
 )
 
 var (
@@ -34,6 +34,7 @@ var (
 	cfgCertFile     = os.Getenv("CERT_FILE")
 	cfgKeyFile      = os.Getenv("KEY_FILE")
 	cfgStaticPrefix = "/media/"
+	cfgLinksPrefix  = "/links/"
 )
 
 func main() {
@@ -131,12 +132,33 @@ var tmplLinks string
 
 func list(c echo.Context) error {
 	files := []fileInfo{}
-	filepath.WalkDir(cfgMediaDir, func(path string, d fs.DirEntry, err error) error {
+
+	root, _ := filepath.Abs(cfgMediaDir)
+
+	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if d.Type().IsRegular() {
+			p := path
+			if strings.HasPrefix(p, root) {
+				p = p[len(root)+1:]
+			}
+
+			fURL, err := url.Parse(cfgServerPrefix + cfgStaticPrefix + p)
+			if err != nil {
+				panic(err)
+			}
+
+			lURL, err := url.Parse(cfgServerPrefix + cfgLinksPrefix + p)
+			if err != nil {
+				panic(err)
+			}
+
+			q.Q(p)
+
 			files = append(files, fileInfo{
 				d:        d,
-				URL:      cfgServerPrefix + cfgStaticPrefix + url.PathEscape(d.Name()),
-				LinksURL: cfgServerPrefix + "/links/" + url.PathEscape(d.Name()),
+				Path:     p,
+				URL:      fURL.String(),
+				LinksURL: lURL.String(),
 			})
 		}
 		return nil
@@ -156,11 +178,18 @@ func list(c echo.Context) error {
 func links(c echo.Context) error {
 	u := c.Request().URL
 
-	fName := path.Base(u.Path)
-	downloadURL := cfgServerPrefix + cfgStaticPrefix + url.PathEscape(fName)
+	p := u.Path
+	if strings.HasPrefix(p, cfgLinksPrefix) {
+		p = p[len(cfgLinksPrefix):]
+	}
+
+	downloadURL, err := url.Parse(cfgServerPrefix + cfgStaticPrefix + p)
+	if err != nil {
+		panic(err)
+	}
 
 	context := map[string]any{
-		"Title": fName,
+		"Title": p,
 		"URL":   downloadURL,
 	}
 

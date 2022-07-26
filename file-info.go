@@ -11,6 +11,7 @@ import (
 
 type fileInfo struct {
 	d        fs.DirEntry
+	Path     string
 	URL      string
 	LinksURL string
 }

@@ -27,7 +27,7 @@ func loop(ctx context.Context, token string) error {
 		botAPI,
 		cfgMediaDir,
 		cfgServerPrefix+cfgStaticPrefix,
-		cfgServerPrefix+"/links/",
+		cfgServerPrefix+cfgLinksPrefix,
 		botAPI.Self.ID)
 
 	u := tgbotapi.NewUpdate(0)
