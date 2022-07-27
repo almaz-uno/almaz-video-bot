@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"almaz.uno/dev/almaz-video-bot/pkg/extractors/mediadl"
 	"almaz.uno/dev/almaz-video-bot/pkg/loghook"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -132,7 +133,7 @@ var tmplLinks string
 
 func list(c echo.Context) error {
 	files := []fileInfo{}
-
+	var totalSize int64
 	root, _ := filepath.Abs(cfgMediaDir)
 
 	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
@@ -154,12 +155,15 @@ func list(c echo.Context) error {
 
 			q.Q(p)
 
-			files = append(files, fileInfo{
+			f := fileInfo{
 				d:        d,
 				Path:     p,
 				URL:      fURL.String(),
 				LinksURL: lURL.String(),
-			})
+			}
+			totalSize += f.Size()
+
+			files = append(files, f)
 		}
 		return nil
 	})
@@ -169,7 +173,8 @@ func list(c echo.Context) error {
 	})
 
 	context := map[string]any{
-		"files": files,
+		"files":        files,
+		"TotalSizeStr": mediadl.FileSizeHumanReadable(totalSize),
 	}
 
 	return template.Must(template.New("list").Parse(tmplList)).Execute(c.Response().Writer, context)
