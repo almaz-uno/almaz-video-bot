@@ -38,6 +38,14 @@ var (
 	cfgLinksPrefix  = "/links/"
 )
 
+var (
+	//go:embed list.html
+	tmplList string
+
+	//go:embed links.html
+	tmplLinks string
+)
+
 func main() {
 	if level, e := zerolog.ParseLevel(cfgLevel); e == nil {
 		zerolog.SetGlobalLevel(level)
@@ -124,12 +132,6 @@ func doMain(runFunc func(ctx context.Context, cancel context.CancelFunc) error) 
 		log.Info().Err(e).Msg("Exiting.")
 	}
 }
-
-//go:embed list.html
-var tmplList string
-
-//go:embed links.html
-var tmplLinks string
 
 func list(c echo.Context) error {
 	files := []fileInfo{}
