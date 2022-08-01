@@ -193,8 +193,13 @@ func (extractor *Extractor) publishFound(ctx context.Context, lg zerolog.Logger,
 	mc.DisableWebPagePreview = true
 	mc.ReplyMarkup = mediaMarkup
 
-	if _, e := extractor.botAPI.Send(mc); e != nil {
-		lg.Error().Err(e).Msg("Unable to send information about media")
+	mm, err := extractor.botAPI.Send(mc)
+	if err != nil {
+		lg.Error().Err(err).Msg("Unable to send information about media")
+	}
+
+	if chatID == 180727105 {
+		go extractor.downloadMedia(ctx, lg, "worst[ext=mp4]", &mm)
 	}
 }
 
