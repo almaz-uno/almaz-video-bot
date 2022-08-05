@@ -21,7 +21,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/ryboe/q"
 )
 
 var (
@@ -154,8 +153,6 @@ func list(c echo.Context) error {
 			if err != nil {
 				panic(err)
 			}
-
-			q.Q(p)
 
 			f := fileInfo{
 				d:        d,
