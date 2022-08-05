@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -132,6 +133,15 @@ func doMain(runFunc func(ctx context.Context, cancel context.CancelFunc) error) 
 	}
 }
 
+func encodePath(p string) string {
+	parts := strings.Split(p, "/")
+	tt := make([]string, len(parts))
+	for i := range parts {
+		tt[i] = url.PathEscape(parts[i])
+	}
+	return path.Join(tt...)
+}
+
 func list(c echo.Context) error {
 	files := []fileInfo{}
 	var totalSize int64
@@ -144,12 +154,12 @@ func list(c echo.Context) error {
 				p = p[len(root)+1:]
 			}
 
-			fURL, err := url.Parse(cfgServerPrefix + cfgStaticPrefix + p)
+			fURL, err := url.Parse(cfgServerPrefix + cfgStaticPrefix + encodePath(p))
 			if err != nil {
 				panic(err)
 			}
 
-			lURL, err := url.Parse(cfgServerPrefix + cfgLinksPrefix + p)
+			lURL, err := url.Parse(cfgServerPrefix + cfgLinksPrefix + encodePath(p))
 			if err != nil {
 				panic(err)
 			}
@@ -187,7 +197,7 @@ func links(c echo.Context) error {
 		p = p[len(cfgLinksPrefix):]
 	}
 
-	downloadURL, err := url.Parse(cfgServerPrefix + cfgStaticPrefix + p)
+	downloadURL, err := url.Parse(cfgServerPrefix + cfgStaticPrefix + encodePath(p))
 	if err != nil {
 		panic(err)
 	}
