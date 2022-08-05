@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 
 	"almaz.uno/dev/almaz-video-bot/pkg/extractors/mediadl"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/rs/zerolog/log"
-	"github.com/ryboe/q"
 )
 
 // DispatchLoop executes main processing loop for the bot
@@ -41,8 +39,8 @@ func loop(ctx context.Context, token string) error {
 			log.Info().Msg("Bye!")
 			return ctx.Err()
 		case update := <-updates:
-			bb, _ := json.MarshalIndent(update, "  ", "  ")
-			q.Q("raw update is", string(bb))
+			// bb, _ := json.MarshalIndent(update, "  ", "  ")
+			// q.Q("raw update is", string(bb))
 			go processUpdate(ctx, botAPI, update, extractor)
 		}
 	}

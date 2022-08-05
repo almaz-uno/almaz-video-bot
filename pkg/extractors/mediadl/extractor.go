@@ -15,7 +15,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/ryboe/q"
 )
 
 type (
@@ -228,7 +227,6 @@ func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger
 
 	if e := cmdPrepare.Run(); e != nil {
 		lgu.Warn().Err(e).Stringer("cmd", cmdPrepare).Msg("Failed to execute preparation command")
-		q.Q(cmdPrepare.Stderr.(*bytes.Buffer).String())
 		mc := tgbotapi.NewMessage(message.Chat.ID, "⚠ Unable to get information for "+u+". Format is "+format)
 		mc.DisableWebPagePreview = true
 		if _, e := extractor.botAPI.Send(mc); e != nil {
@@ -340,7 +338,6 @@ func (extractor *Extractor) trackStatus(ctx context.Context, lg zerolog.Logger, 
 				continue
 			}
 			text = outputText
-			q.Q(text)
 			em := tgbotapi.NewEditMessageText(chatID, statusMessage.MessageID, `<pre><code>`+text+`</code></pre>`)
 			em.ParseMode = "HTML"
 			_, err = extractor.botAPI.Send(em)
@@ -395,7 +392,6 @@ func (extractor *Extractor) showFormats(ctx context.Context, lg zerolog.Logger, 
 
 	if e := cmdFormat.Run(); e != nil {
 		lgu.Warn().Err(e).Stringer("cmd", cmdFormat).Msg("Failed to execute preparation command")
-		q.Q(cmdFormat.Stderr.(*bytes.Buffer).String())
 		mc := tgbotapi.NewMessage(message.Chat.ID, "⚠ Unable to get format information for "+u)
 		mc.DisableWebPagePreview = true
 		if _, e := extractor.botAPI.Send(mc); e != nil {
