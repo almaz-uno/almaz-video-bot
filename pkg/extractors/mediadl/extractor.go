@@ -246,15 +246,10 @@ func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger
 
 		lgd := lg.With().Str("url", info.WebpageURL).Logger()
 
-		mc := tgbotapi.NewMessage(message.Chat.ID, "📀 ⇒ Downloading <b>"+htmlReplacer.Replace(info.Filename)+"</b>...")
+		mc := tgbotapi.NewMessage(message.Chat.ID, "")
 		mc.ReplyToMessageID = message.MessageID
 		mc.DisableWebPagePreview = true
 		mc.ParseMode = "HTML"
-		dm, err := extractor.botAPI.Send(mc)
-		if err != nil {
-			lgd.Warn().Err(err).Msg("Unable to send result message")
-			continue
-		}
 
 		cmdDownload := YtDlp(ctx, extractor.wd, "-o", outputFileFormat, "--progress", info.WebpageURL)
 		if len(format) > 0 {
@@ -265,32 +260,29 @@ func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger
 		defer cancelDownload()
 
 		go extractor.trackStatus(ctxDownload, lgd, cmdDownload.Stdout.(*bytes.Buffer), message.Chat.ID)
+		err := cmdDownload.Run()
+		cancelDownload()
 
-		var emtc tgbotapi.EditMessageTextConfig
-		if e := cmdDownload.Run(); e != nil {
-			cancelDownload()
-			lgd.Warn().Err(e).Stringer("cmdDownload", cmdDownload).Msg("Failed to execute download command")
+		if err != nil {
+			lgd.Warn().Err(err).Stringer("cmdDownload", cmdDownload).Msg("Failed to execute download command")
 			fmt.Fprintln(os.Stderr, cmdDownload.Stderr.(*bytes.Buffer).String())
-			emtc = tgbotapi.NewEditMessageText(dm.Chat.ID, dm.MessageID, `✖✖ Unable to download <b>`+htmlReplacer.Replace(info.Filename)+"</b>")
+			mc.Text = `✖✖ Unable to download <b>` + htmlReplacer.Replace(info.Filename) + "</b>"
 		} else {
-			cancelDownload()
 			hrSize := hrSize(filepath.Join(extractor.wd, info.Filename))
 			lgd.Info().Stringer("cmdDownload", cmdDownload).Msg("Successfully downloaded")
 			tgtURL := extractor.urlPrefix + url.PathEscape(info.Filename)
 			linksURL := extractor.linksPrefix + "" + url.PathEscape(info.Filename)
-			emtc = tgbotapi.NewEditMessageText(dm.Chat.ID, dm.MessageID, `<a href="`+linksURL+`">🎯 ⇒ Downloaded <b>`+htmlReplacer.Replace(info.Filename)+"</b></a> "+hrSize)
+			mc.Text = `<a href="` + linksURL + `">🎯 ⇒ Downloaded <b>` + htmlReplacer.Replace(info.Filename) + "</b></a> " + hrSize
 			mu := tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL(
 						"🎬 "+info.Ext+": "+info.Resolution,
 						tgtURL),
 				))
-			emtc.ReplyMarkup = &mu
+			mc.ReplyMarkup = &mu
 		}
 
-		emtc.ParseMode = "HTML"
-		emtc.DisableWebPagePreview = true
-		if _, e := extractor.botAPI.Send(emtc); e != nil {
+		if _, e := extractor.botAPI.Send(mc); e != nil {
 			lgd.Warn().Err(e).Msg("Unable to send result message")
 		}
 
@@ -304,7 +296,7 @@ func hrSize(filePath string) string {
 	return ""
 }
 
-const tickerInterval = 10 * time.Second
+const tickerInterval = 5 * time.Second
 
 func (extractor *Extractor) trackStatus(ctx context.Context, lg zerolog.Logger, buffer *bytes.Buffer, chatID int64) {
 	ticker := time.NewTicker(tickerInterval)
@@ -343,7 +335,6 @@ func (extractor *Extractor) trackStatus(ctx context.Context, lg zerolog.Logger, 
 			_, err = extractor.botAPI.Send(em)
 			if err != nil {
 				lg.Warn().Err(err).Msg("Failed to update status message")
-				// return
 			}
 		}
 	}
