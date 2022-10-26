@@ -20,6 +20,7 @@ import (
 	"almaz.uno/dev/almaz-video-bot/pkg/extractors/mediadl"
 	"almaz.uno/dev/almaz-video-bot/pkg/loghook"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -72,6 +73,7 @@ func main() {
 	}
 
 	ec := echo.New()
+	ec.Use(middleware.CORS())
 	ec.Static(cfgStaticPrefix, cfgMediaDir)
 	ec.GET("/list", list)
 	ec.GET("/links/*", links)
