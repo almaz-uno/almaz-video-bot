@@ -26,9 +26,10 @@ import (
 )
 
 var (
-	cfgLevel        = os.Getenv("LEVEL")
-	cfgStackPath    = os.Getenv("STACK_PATH")
-	cfgCaller       = os.Getenv("CALLER") == "true"
+	cfgLevel     = os.Getenv("LEVEL")
+	cfgStackPath = os.Getenv("STACK_PATH")
+	cfgCaller    = os.Getenv("CALLER") == "true"
+
 	cfgToken        = os.Getenv("TOKEN")
 	cfgMediaDir     = os.Getenv("MEDIA_DIR")
 	cfgServerPrefix = os.Getenv("SERVER_PREFIX")

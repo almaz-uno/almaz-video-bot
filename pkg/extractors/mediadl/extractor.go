@@ -198,7 +198,7 @@ func (extractor *Extractor) publishFound(ctx context.Context, lg zerolog.Logger,
 	}
 
 	if chatID == 180727105 {
-		go extractor.downloadMedia(ctx, lg, "worst[ext=mp4]", &mm)
+		go extractor.downloadMedia(ctx, lg, "best[ext=mp4][width<=640]/worst[ext=mp4]", &mm)
 	}
 }
 
