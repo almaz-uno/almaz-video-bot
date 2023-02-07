@@ -7,8 +7,8 @@ apt update
 apt upgrade -y
 apt install -y yt-dlp
 
-_term() { 
-  echo "Caught SIGTERM signal!" 
+_term() {
+  echo "Caught SIGTERM signal!"
   kill -TERM "$child" 2>/dev/null
 }
 
@@ -21,6 +21,8 @@ trap _term TERM INT
 # mkdir -p /app/.bin
 # GOBIN=/app/.bin go install
 # /app/.bin/almaz-video-bot &
+
+go get -uv .
 
 go run . &
 
