@@ -22,7 +22,7 @@ trap _term TERM INT
 # GOBIN=/app/.bin go install
 # /app/.bin/almaz-video-bot &
 
-go get -u -v .
+# go get -u -v .
 
 go run . &
 
