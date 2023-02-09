@@ -1,0 +1,4 @@
+# almaz-video-bot
+Video extractor bot
+
+Telegram bot to download video from various sources with yt-dlp cli tool.
