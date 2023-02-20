@@ -5,7 +5,12 @@ cd /app
 echo "deb http://deb.debian.org/debian/ bullseye-backports main contrib non-free" > /etc/apt/sources.list.d/backports.list
 apt update
 apt upgrade -y
-apt install -y yt-dlp
+apt install -y yt-dlp git
+
+rm -fr /app/yt-dlp
+git clone https://github.com/yt-dlp/yt-dlp.git /app/yt-dlp
+
+ln -sf /app/yt-dlp/yt-dlp.sh /usr/bin/yt-dlp
 
 _term() {
   echo "Caught SIGTERM signal!"
