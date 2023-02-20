@@ -8,7 +8,6 @@ apt upgrade -y
 apt install -y yt-dlp git python3-pip
 
 pip install isodate
-pip install dateutil
 
 test -d /app/yt-dlp || git clone https://github.com/yt-dlp/yt-dlp.git /app/yt-dlp
 git -C /app/yt-dlp pull
