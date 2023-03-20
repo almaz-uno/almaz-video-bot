@@ -214,7 +214,8 @@ func (extractor *Extractor) publishFound(ctx context.Context, lg zerolog.Logger,
 	}
 }
 
-const outputFileFormat = `%(uploader.:64)s/%(title.:96)s • %(id)s.%(format_id)s.%(ext)s`
+// const outputFileFormat = `%(uploader.:64)s/%(title.:96)s • %(id)s.%(format_id)s.%(ext)s`
+const outputFileFormat = `%(title.:96)s • %(id)s.%(format_id)s.%(ext)s`
 
 func (extractor *Extractor) downloadMedia(ctx context.Context, lg zerolog.Logger, format string, message *tgbotapi.Message) {
 	format = strings.TrimSpace(format)
