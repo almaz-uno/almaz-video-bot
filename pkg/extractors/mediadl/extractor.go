@@ -132,6 +132,15 @@ func extractURLs(message *tgbotapi.Message) []string {
 		}
 	}
 
+	mu := map[string]bool{}
+	for _, u := range URLs {
+		mu[u] = true
+	}
+	URLs = nil
+	for u := range mu {
+		URLs = append(URLs, u)
+	}
+
 	return URLs
 }
 
@@ -173,10 +182,10 @@ func (extractor *Extractor) extractMediaLinks(ctx context.Context, lg zerolog.Lo
 
 var mediaMarkup = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("best", commandDownload+""),
-		tgbotapi.NewInlineKeyboardButtonData("ba", commandDownload+"bestaudio"),
-		tgbotapi.NewInlineKeyboardButtonData("worst", commandDownload+"worst[ext=mp4]"),
-		tgbotapi.NewInlineKeyboardButtonData("wa", commandDownload+"worstaudio"),
+		tgbotapi.NewInlineKeyboardButtonData("best", commandDownload+"b*+ba"),
+		tgbotapi.NewInlineKeyboardButtonData("640", commandDownload+"b*[width=640]+ba"),
+		tgbotapi.NewInlineKeyboardButtonData("worst", commandDownload+"worst+ba"),
+		tgbotapi.NewInlineKeyboardButtonData("multi", commandDownload+"b*[width=640]+ba/worst/best"),
 		tgbotapi.NewInlineKeyboardButtonData("List formats", commandFormats),
 	),
 )
@@ -200,7 +209,7 @@ func (extractor *Extractor) publishFound(ctx context.Context, lg zerolog.Logger,
 	if chatID == 180727105 {
 		// myFormat := "best[ext=mp4][width<=640][filesize<200M]/worst[ext=mp4]"
 		// myFormat := "mp4[width=640]/worst[ext=mp4]/ba"
-		myFormat := "bestvideo*[width=640]+bestaudio/best"
+		myFormat := "b*[width=640]+ba/worst/best"
 		go extractor.downloadMedia(ctx, lg, myFormat, &mm)
 	}
 }
